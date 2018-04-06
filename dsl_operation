@@ -63,6 +63,7 @@ POST clients/_search
   }
 }
 
+# nested类型索引创建
 PUT library
 POST library/_mapping/book
 {
@@ -92,6 +93,7 @@ POST library/_mapping/book
 }
 }
 
+# 批量导入数据
 POST library/book/_bulk
 { "index": {"_index": "library", "_type": "book", "_id": "1"}}
 { "title": "All Quiet on the Western Front","otitle": "Im Westen nichts Neues","author": "Erich Maria Remarque","year": 1929,"characters": ["Paul Bumer", "Albert Kropp", "Haie Westhus", "Fredrich Mller", "Stanislaus Katczinsky", "Tjaden"],"tags": ["novel"],"copies": 1, "available": true, "section" : 3}
@@ -151,6 +153,7 @@ POST library/book/6
     }]
 }
 
+# 全量检索
 GET library/_search
 {
   "query":{
@@ -158,6 +161,7 @@ GET library/_search
   }
 }
 
+# 范围检索
 POST library/_search
 {
   "query":{
@@ -170,6 +174,7 @@ POST library/_search
   }
 }
 
+# 精确多值匹配
 POST library/_search
 {
   "query":{
@@ -179,6 +184,7 @@ POST library/_search
   }
 }
 
+# bool查询
 GET library/_search
 {
   "query":{
@@ -200,6 +206,7 @@ GET library/_search
   }
 }
 
+# dis_max 检索——dismax的核心就是解决：1个字段包含两个关键词比2个字段分别包含一个关键词得分要高的问题。
 GET library/_search
 {
   "_source":{
@@ -216,6 +223,7 @@ GET library/_search
   }
 }
 
+# 全文检索
 GET library/_search
 {
   "explain": true, 
@@ -274,6 +282,7 @@ GET library/_search
   }
 }
 
+# 原生检索方式——用途非常广和深远
 GET library/_search
 {
   "query": {
@@ -303,6 +312,7 @@ GET library/_search
   }
 }
 
+# 前缀检索
 GET library/_search
 {
   "query": {
@@ -336,6 +346,7 @@ GET library/_search
   }
 }
 
+# 自定义评分检索
 GET library/_search
 {
   "query":{
@@ -356,6 +367,7 @@ GET library/_search
   }
 }
 
+# 给特定字段加权，以提升或减低打分，用来改变返回排序
 GET library/_search
 {
   "query": {
@@ -398,6 +410,7 @@ GET library/_search
   }
 }
 
+# 位置敏感检索（很少用，不过社区有人提问过）
 GET library/_search
 {
   "query": {
@@ -449,6 +462,7 @@ POST library/_search
   }
 }
 
+# nested特定类型检索
 GET library/_search
 {
   "query": {
