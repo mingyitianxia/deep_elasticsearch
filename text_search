@@ -1,0 +1,279 @@
+# 1、二次评分
+POST library/_search
+{
+  "_source": {
+    "includes": ["title", "available"]
+  },
+  "query": {
+    "match_all": {}
+  },
+  "rescore":{
+    "query":{
+      "rescore_query":{
+        "function_score":{
+          "query":{
+            "match_all":{}
+          },
+          "script_score":{
+            "script":"doc['year'].value"
+          }
+        }
+      }
+    }
+  }
+}
+# 2、多字段检索
+GET library/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "complete conan doyle",
+      "fields": ["title", "author", "characters"]
+    }
+  }
+}
+
+# 这种方式，逐渐被废弃和替换
+GET library/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "complete conan doyle",
+      "fields": ["title", "author", "charactor"], 
+      "use_dis_max": true
+    }
+  }
+}
+
+# 3、多字段检索——best fields匹配
+GET library/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "complete conan doyle",
+      "fields": ["title", "author", "characters"], 
+      "type":"best_fields",
+      "tie_breaker": 0.8
+    }
+  }
+}
+
+
+GET library/_search
+{
+  "query": {
+   "dis_max": {
+     "tie_breaker": 0.8,
+     "queries": [
+       {
+         "match": {
+           "title": "complete conan doyle"
+         }
+       },{
+         "match": {
+           "author": "complete conan doyle"
+         }
+       },{"match":{
+         "characters": "complete conan doyle"
+       }}]
+   }
+  }
+}
+# 4、多字段检索——cross_fields匹配
+GET library/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "complete conan doyle",
+      "fields": ["title", "author", "characters"], 
+      "type":"cross_fields",
+    "operator":"and"
+    }
+  }
+}
+
+# 5、多字段检索——most_fields匹配
+POST library/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Die Leiden",
+      "fields": ["title", "otitle"], 
+      "type":"most_fields"
+    }
+  }
+}
+
+GET library/_search
+{
+  "query": {
+  "bool": {
+    "should": [
+      {"match": {
+        "title": "die leiden"
+      }},
+      {
+        "match": {
+          "otitle": "die leiden"
+        }
+      }
+    ]
+  }
+   }
+  }
+  
+  # 6、多字段检索——phrase匹配
+  GET library/_search
+  {
+    "query": {
+     "multi_match": {
+       "query": "sherlock holmes",
+       "fields": ["title","author"],
+       "type":"phrase"
+     }
+  }
+  }
+  
+  GET library/_search
+  {
+    "query": {
+      "dis_max": {
+        "queries": [
+          {
+          "match_phrase":{"title":"sherlock holmes"}},
+         { "match_phrase":{
+            "author":"sherlock holmes"
+          }}]
+      }
+    }
+  }
+  
+  # 7、多字段检索——phrase_prefix匹配
+    GET library/_search
+  {
+    "query": {
+     "multi_match": {
+       "query": "sherlock hol",
+       "fields": ["title","author"],
+       "type":"phrase_prefix"
+     }
+  }
+  }
+
+GET library/_search
+  {
+    "query": {
+      "dis_max": {
+        "queries": [
+          {
+          "match_phrase_prefix":{"title":"sherlock holmes"}},
+         { "match_phrase_prefix":{
+            "author":"sherlock holmes"
+          }}]
+      }
+    }
+  }
+  
+  #7、聚合操作
+  POST interns/review/1
+  {
+    "intern":"Richard",
+    "grade":"bad",
+    "type":"grade"
+  }
+  
+POST interns/review/2
+  {
+    "intern":"Ralf",
+    "grade":"perfact",
+    "type":"grade"
+  }
+  
+POST interns/review/3
+  {
+    "intern":"Richard",
+    "grade":"bad",
+    "type":"grade"
+  }
+  
+POST interns/review/3
+  {
+    "intern":"Richard",
+    "grade":"bad",
+    "type":"grade"
+  }
+POST interns/review/4
+  {
+    "intern":"Richard",
+    "grade":"bad",
+    "type":"review"
+  }
+POST interns/review/5
+  {
+    "intern":"Richard",
+    "grade":"good",
+    "type":"grade"
+  }
+POST interns/review/6
+  {
+    "intern":"Ralf",
+    "grade":"good",
+    "type":"grade"
+  }
+  
+POST interns/review/7
+  {
+    "intern":"Ralf",
+    "grade":"perfect",
+    "type":"grade"
+  }
+       POST interns/review/8
+  {
+    "intern":"Richard",
+    "grade":"medium",
+    "type":"review"
+  }
+       POST interns/review/9
+  {
+    "intern":"Monica",
+    "grade":"medium",
+    "type":"grade"
+  }
+  
+POST interns/review/10
+  {
+    "intern":"Monica",
+    "grade":"medium",
+    "type":"grade"
+  }
+  
+POST interns/review/11
+  {
+    "intern":"Ralf",
+    "grade":"good",
+    "type":"grade"
+  }
+  
+  POST interns/review/12
+  {
+    "intern":"Ralf",
+    "grade":"good",
+    "type":"grade"
+  }
+  
+//聚合——查找对于Richard的典型评价
+GET /interns/_search
+{
+  "query": {
+    "match": {
+      "intern": "Richard"
+    }
+  },
+  "aggregations":{
+    "description":{
+      "significant_terms": {
+        "field": "grade.keyword"
+      }
+    }
+  }
+}
