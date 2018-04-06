@@ -277,3 +277,133 @@ GET /interns/_search
     }
   }
 }
+
+# 8、应该针对非text类型字段进行聚合
+GET library/_search
+{
+  "query": {
+    "term":{
+      "available": true
+    }
+  },
+  "aggregations":{
+    "description":{
+      "significant_terms":
+      {
+        "field":"title.keyword"
+      }
+    }
+  }
+}
+
+# 9、设置过滤条件来缩小后台数据集的大小。
+GET /interns/_search
+{
+  "query": {
+    "match": {
+      "intern": "Richard"
+    }
+  },
+  "aggregations":{
+    "description":{
+      "significant_terms": {
+        "field": "grade.keyword",
+        "background_filter": {
+          "term":{
+            "type":"grade"
+          }
+        }
+      }
+    }
+  }
+}
+
+# 10、限定最小文档数
+GET /interns/_search
+{
+  "query": {
+    "match": {
+      "intern": "Richard"
+    }
+  },
+  "aggregations":{
+    "description":{
+      "significant_terms": {
+        "field": "grade.keyword",
+       "min_doc_count": 3
+      }
+    }
+  }
+}
+
+# 11、top_hits聚合——文档分组
+GET library/_search
+
+GET library/_search
+{
+  "size":0,
+  "aggs":{
+    "when":{
+      "histogram": {
+        "field": "year",
+        "interval": 100
+      },
+      "aggs":{
+        "book":{
+          "top_hits": {
+            "sort":{
+              "year":"asc"
+            },
+            "_source":{
+              "includes":["title","avaliable"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# 12、聚合的复杂实现
+GET library/_search
+{
+  "query": {
+    "bool":{
+      "filter": {
+       "term":{
+         "copies": 1 
+       }
+      }
+    }
+  },
+  "size":0,
+  "aggs": {
+    "when": {
+      "histogram": {
+        "field": "year",
+        "interval": 100
+      },
+      "aggs": {
+        "book": {
+          "top_hits": {
+            "highlight": {
+              "fields": {
+                "title": {}
+              }
+            },
+            "explain": true,
+            "version": true,
+            "_source": {
+              "includes": ["title","avalible"]},
+          "script_fields":{
+            "century":{
+              "script":"(doc[\"year\"].value / 100).intValue()"
+            }
+          },
+          "size":1
+        }
+        }
+      }
+    }
+  }
+}
