@@ -407,3 +407,22 @@ GET library/_search
     }
   }
 }
+
+# 13、terms aggeration
+注意terms聚合和significant_terms的区别：
+前者返回全部信息，后者返回最重要，得分最高的信息。
+GET /interns/_search
+{
+  "query": {
+    "match": {
+      "intern": "Richard"
+    }
+  },
+  "aggs":{
+    "description":{
+      "terms": {
+        "field": "grade.keyword"
+      }
+    }
+  }
+}
