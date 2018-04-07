@@ -426,3 +426,126 @@ GET /interns/_search
     }
   }
 }
+
+# 14、object类型与检索
+PUT object
+POST object/_mapping/doc
+{
+  "doc":{
+    "properties":{
+      "title":{"type":"text",
+      "fields":{
+        "keyword":{
+        "type":"keyword"
+        }
+      }
+    },
+    "quantity":{"type":"integer"},
+    "edition":{
+      "type":"object",
+      "properties":{
+        "isbn":{"type":"keyword"},
+        "circulation":{"type":"integer"}
+      }
+    }
+  }
+}
+}
+
+POST object/doc/1
+{
+  "title":"Title",
+  "quantity":100,
+  "edition":[
+    {
+      "isbn":"1234567890",
+      "circulation":50000
+    },
+    {
+      "isbn":"9876543210",
+      "circulation":2000
+    }
+    ]
+  }
+  
+  GET object/_search
+  {
+    "_source": {
+      "includes": ["_id","title"]
+    },
+    "query": {
+      "bool": {
+        "must": [
+          {"term":{
+            "edition.isbn": "1234567890"
+          }},
+          {"term": {
+            "edition.circulation": {
+              "value": 2000
+            }
+          }}]
+      }
+    }
+  }
+  
+  
+ # 15、nested类型与检索
+  PUT nested_test
+POST nested_test/_mapping/doc
+{
+  "doc":{
+    "properties":{
+      "title":{"type":"text",
+      "fields":{
+        "keyword":{
+        "type":"keyword"
+        }
+      }
+    },
+    "quantity":{"type":"integer"},
+    "edition":{
+      "type":"nested",
+      "properties":{
+        "isbn":{"type":"keyword"},
+        "circulation":{"type":"integer"}
+      }
+    }
+  }
+}
+}
+
+POST nested_test/doc/1
+{
+  "title":"Title",
+  "quantity":100,
+  "edition":[
+    {
+      "isbn":"1234567890",
+      "circulation":50000
+    },
+    {
+      "isbn":"9876543210",
+      "circulation":2000
+    }
+    ]
+  }
+  
+  GET nested_test/_search
+  {
+    "_source": {
+      "includes": ["_id","title"]
+    },
+    "query": {
+      "bool": {
+        "must": [
+          {"term":{
+            "edition.isbn": "1234567890"
+          }},
+          {"term": {
+            "edition.circulation": {
+              "value": 2000
+            }
+          }}]
+      }
+    }
+  }
