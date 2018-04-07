@@ -192,3 +192,15 @@ GET library/_search
     }
   }
 }
+
+# 7、可纠正拼写错误——借助：minimum_should_match
+GET library/_search
+{
+  "query": {
+    "query_string": {
+      "query": "Crime Punishment",
+      "default_field": "title",
+      "minimum_should_match": "80%"
+    }
+  }
+}
