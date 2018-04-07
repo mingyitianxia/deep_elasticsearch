@@ -549,3 +549,19 @@ POST nested_test/doc/1
       }
     }
   }
+
+# 16、脚本检索
+GET library/_search
+{
+  "_source": {
+     "includes": ["_id", "_score", "title", "year"]
+  },
+  "query": {
+    "function_score": {
+      "query": {"match_all": {}},
+      "script_score": {
+       "script":"def year = doc[\"year\"].value; if (year < 1800) { return 1.0} else if (year < 1900) { return 2.0 } else { return year - 1000 }"
+      }
+    }
+  }
+}
