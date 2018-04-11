@@ -124,3 +124,31 @@ GET books/_search
   },
   "size": 0
 }
+
+# 7、报错提示
+{
+  "error": {
+    "root_cause": [
+      {
+        "type": "search_context_exception",
+        "reason": "unknown type for collapse field `title`, only keywords and numbers are accepted"
+      }
+    ],
+    "type": "search_phase_execution_exception",
+    "reason": "all shards failed",
+    "phase": "query",
+    "grouped": true,
+    "failed_shards": [
+      {
+        "shard": 0,
+        "index": "books",
+        "node": "ikKuXkFvRc-qFCqG99smGg",
+        "reason": {
+          "type": "search_context_exception",
+          "reason": "unknown type for collapse field `title`, only keywords and numbers are accepted"
+        }
+      }
+    ]
+  },
+  "status": 500
+}
