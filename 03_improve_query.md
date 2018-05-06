@@ -1,4 +1,5 @@
 # 1、基础查询
+```
 GET library/_search
 {
   "_source":{
@@ -13,8 +14,9 @@ GET library/_search
     }
   }
 }
-
+```
 # 2、多字段检索
+```
 GET library/_search
 {
   "_source":{
@@ -30,8 +32,10 @@ GET library/_search
       }
     }
   }
+  ```
   
   # 3、短语检索
+  ```
    GET library/_search
   {
   "_source": {
@@ -67,9 +71,11 @@ GET library/_search
     }
   }
 }
+```
 
 # 4、引入slop设置单词间的最大间隔，
 最大间隔之内的单词可以被认为与查询中的短语匹配。
+```
 GET library/_search
 {
   "_source": {
@@ -111,8 +117,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 5、过滤到垃圾信息——must_not来帮忙
+```
 GET library/_search
 {
   "_source": {
@@ -171,7 +179,9 @@ GET library/_search
   }
 }
 
-#6、引入boost提升权重
+```
+# 6、引入boost提升权重
+```
 {
   "_source": {
     "includes": [
@@ -192,8 +202,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 7、可纠正拼写错误——借助：minimum_should_match
+```
 GET library/_search
 {
   "query": {
@@ -204,3 +216,4 @@ GET library/_search
     }
   }
 }
+```
