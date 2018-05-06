@@ -335,8 +335,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 11、前缀检索
+```
 GET library/_search
 {
   "query": {
