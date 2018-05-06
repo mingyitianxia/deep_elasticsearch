@@ -1,4 +1,5 @@
 # 1、新建库表
+```
 PUT books
 {
   "mappings": {
@@ -16,8 +17,9 @@ PUT books
     }
   }
 }
-
+```
 # 2、导入数据
+```
 PUT books/_doc/2
 {
   "title":"Hadoop权 指南(第4版)+数据算法"
@@ -47,8 +49,10 @@ PUT books/_doc/6
 {
   "title":"hadoop高级数据分析"
 }
+```
 
 # 3、全量检索
+```
 GET books/_search
 {
   "query": {
@@ -58,8 +62,10 @@ GET books/_search
     "_doc":"desc"
   }
 }
+```
 
 # 4、折叠检索（类似去重效果）
+```
 GET books/_search
 {
   "query": {
@@ -69,8 +75,10 @@ GET books/_search
     "field": "title.keyword"
   }
 }
+```
 
 # 5、统计去重后的计数
+```
 GET books/_search
 {
    "size":0,
@@ -82,16 +90,20 @@ GET books/_search
         }
     }
 }
+```
 
 # 6、全量检索结果
+```
 GET books/_count
 {
   "query":{
     "match_all":{}
   }
 }
+```
 
 # 7、去重后的检索结果（比collapse重叠复杂）
+```
 GET books/_search
 {
   "query": {
@@ -124,8 +136,10 @@ GET books/_search
   },
   "size": 0
 }
+```
 
 # 7、报错提示
+```
 {
   "error": {
     "root_cause": [
@@ -152,3 +166,4 @@ GET books/_search
   },
   "status": 500
 }
+```
