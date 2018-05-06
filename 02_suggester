@@ -1,4 +1,5 @@
-1、term_suggester
+# 1、term_suggester
+```
 POST library/_search
 {
   "suggest":{
@@ -32,8 +33,10 @@ POST library/_search
     }
   }
 }
+```
 
-2、phrase_suggester
+# 2、phrase_suggester
+```
 POST library/_search
 {
   "suggest": {
@@ -49,12 +52,14 @@ POST library/_search
     }
   }
 }
+```
 
-3、completion suggester 参见Elasitcsearch社区大神讲解
+# 3、completion suggester 参见Elasitcsearch社区大神讲解
 参考：https://elasticsearch.cn/article/142
 
 在ES6.2.2下实战：
 
+```
 PUT /blogs/
 {
   "mappings": {
@@ -206,3 +211,4 @@ POST _analyze
   "analyzer":"english",
   "text": "elasticsearch is rock solid"
 }
+```
