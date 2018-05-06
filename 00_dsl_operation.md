@@ -69,6 +69,7 @@ POST clients/_search
 ```
 
 # 2、 nested类型索引创建
+```
 PUT library
 POST library/_mapping/book
 {
@@ -97,8 +98,9 @@ POST library/_mapping/book
 }
 }
 }
-
+```
 #  3、批量导入数据
+```
 POST library/book/_bulk
 { "index": {"_index": "library", "_type": "book", "_id": "1"}}
 { "title": "All Quiet on the Western Front","otitle": "Im Westen nichts Neues","author": "Erich Maria Remarque","year": 1929,"characters": ["Paul Bumer", "Albert Kropp", "Haie Westhus", "Fredrich Mller", "Stanislaus Katczinsky", "Tjaden"],"tags": ["novel"],"copies": 1, "available": true, "section" : 3}
@@ -108,8 +110,9 @@ POST library/book/_bulk
 { "title": "The Complete Sherlock Holmes","author": "Arthur Conan Doyle","year": 1936,"characters": ["Sherlock Holmes","Dr. Watson", "G. Lestrade"],"tags": [],"copies": 0, "available" : false, "section" : 12}
 { "index": {"_index": "library", "_type": "book", "_id": "4"}}
 { "title": "Crime and Punishment","otitle": "pec ssss","author": "Fyodor Dostoevsky","year": 1886,"characters": ["Raskolnikov", "Sofia Semyonovna Marmeladova"],"tags": [],"copies": 0, "available" : true}
+```
 
-
+```
 POST library/book/5
 {
   "title":"The Sorows of Young Werther",
@@ -157,16 +160,20 @@ POST library/book/6
       "stars":32
     }]
 }
+```
 
 # 4、全量检索
+```
 GET library/_search
 {
   "query":{
     "match_all": {}
   }
 }
+```
 
 # 5、范围检索
+```
 POST library/_search
 {
   "query":{
@@ -178,8 +185,10 @@ POST library/_search
     }
   }
 }
+```
 
 # 6、精确多值匹配
+```
 POST library/_search
 {
   "query":{
@@ -188,8 +197,10 @@ POST library/_search
     }
   }
 }
+```
 
 # 7、bool查询
+```
 GET library/_search
 {
   "query":{
@@ -210,9 +221,12 @@ GET library/_search
     }
   }
 }
+```
 
 # 8、dis_max 检索
+
 ——dismax的核心就是解决：1个字段包含两个关键词比2个字段分别包含一个关键词得分要高的问题。
+```
 GET library/_search
 {
   "_source":{
@@ -228,8 +242,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 9、全文检索
+```
 GET library/_search
 {
   "explain": true, 
@@ -287,8 +303,10 @@ GET library/_search
     "match_all": {}
   }
 }
+```
 
 # 10、原生检索方式——用途非常广和深远
+```
 GET library/_search
 {
   "query": {
@@ -351,8 +369,9 @@ GET library/_search
     }
   }
 }
-
+```
 # 12、自定义评分检索
+```
 GET library/_search
 {
   "query":{
@@ -372,8 +391,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 13、给特定字段加权，以提升或减低打分，用来改变返回排序
+```
 GET library/_search
 {
   "query": {
@@ -415,8 +436,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 14、位置敏感检索（很少用，不过社区有人提问过）
+```
 GET library/_search
 {
   "query": {
@@ -467,8 +490,10 @@ POST library/_search
     "match_all":{}
   }
 }
+```
 
 # 15、nested特定类型检索
+```
 GET library/_search
 {
   "query": {
@@ -507,3 +532,4 @@ GET library/_search
         }
       }
     }
+```
