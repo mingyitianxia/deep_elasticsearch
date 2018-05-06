@@ -1,4 +1,5 @@
 # 1、二次评分
+```
 POST library/_search
 {
   "_source": {
@@ -22,7 +23,9 @@ POST library/_search
     }
   }
 }
+```
 # 2、多字段检索
+```
 GET library/_search
 {
   "query": {
@@ -32,8 +35,10 @@ GET library/_search
     }
   }
 }
+```
 
-# 这种方式，逐渐被废弃和替换
+这种方式，逐渐被废弃和替换
+```
 GET library/_search
 {
   "query": {
@@ -44,8 +49,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 3、多字段检索——best fields匹配
+```
 GET library/_search
 {
   "query": {
@@ -57,6 +64,7 @@ GET library/_search
     }
   }
 }
+
 
 
 GET library/_search
@@ -79,7 +87,10 @@ GET library/_search
    }
   }
 }
+```
+
 # 4、多字段检索——cross_fields匹配
+```
 GET library/_search
 {
   "query": {
@@ -91,8 +102,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 5、多字段检索——most_fields匹配
+```
 POST library/_search
 {
   "query": {
@@ -103,6 +116,7 @@ POST library/_search
     }
   }
 }
+
 
 GET library/_search
 {
@@ -121,8 +135,9 @@ GET library/_search
   }
    }
   }
-  
+  ```
   # 6、多字段检索——phrase匹配
+  ```
   GET library/_search
   {
     "query": {
@@ -147,8 +162,10 @@ GET library/_search
       }
     }
   }
+  ```
   
   # 7、多字段检索——phrase_prefix匹配
+  ```
     GET library/_search
   {
     "query": {
@@ -173,8 +190,10 @@ GET library/_search
       }
     }
   }
+  ```
   
   #7、聚合操作
+  ```
   POST interns/review/1
   {
     "intern":"Richard",
@@ -277,8 +296,10 @@ GET /interns/_search
     }
   }
 }
+```
 
 # 8、应该针对非text类型字段进行聚合
+```
 GET library/_search
 {
   "query": {
@@ -295,8 +316,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 9、设置过滤条件来缩小后台数据集的大小。
+```
 GET /interns/_search
 {
   "query": {
@@ -317,8 +340,10 @@ GET /interns/_search
     }
   }
 }
+```
 
 # 10、限定最小文档数
+```
 GET /interns/_search
 {
   "query": {
@@ -335,8 +360,10 @@ GET /interns/_search
     }
   }
 }
+```
 
 # 11、top_hits聚合——文档分组
+```
 GET library/_search
 
 GET library/_search
@@ -363,8 +390,10 @@ GET library/_search
     }
   }
 }
+```
 
 # 12、聚合的复杂实现
+```
 GET library/_search
 {
   "query": {
@@ -407,10 +436,12 @@ GET library/_search
     }
   }
 }
+```
 
 # 13、terms aggeration
 注意terms聚合和significant_terms的区别：
 前者返回全部信息，后者返回最重要，得分最高的信息。
+```
 GET /interns/_search
 {
   "query": {
@@ -426,8 +457,10 @@ GET /interns/_search
     }
   }
 }
+```
 
 # 14、object类型与检索
+```
 PUT object
 POST object/_mapping/doc
 {
@@ -487,9 +520,10 @@ POST object/doc/1
       }
     }
   }
-  
+  ```
   
  # 15、nested类型与检索
+ ```
   PUT nested_test
 POST nested_test/_mapping/doc
 {
@@ -549,10 +583,12 @@ POST nested_test/doc/1
       }
     }
   }
+  ```
 
 # 16、脚本检索
 _index方式在6.X版本已不支持，如下官网介绍：
 https://www.elastic.co/guide/en/elasticsearch/reference/6.x/modules-advanced-scripting.html
+```
 GET library/_search
 {
   "_source": {
@@ -567,3 +603,4 @@ GET library/_search
     }
   }
 }
+```
