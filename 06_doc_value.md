@@ -50,6 +50,7 @@ PUT my_index
 The status_code field has doc_values enabled by default.
 The session_id has doc_values disabled, but can still be queried.
 
-小结：
+## 小结：
 1、doc_values是存储在磁盘的数据结构，在文档建立索引的时候创建。
+
 2、对比：field_data缓存主要用于在字段上进行排序或计算聚合。 它将所有字段值加载到内存中，以便为这些值提供基于文档的快速访问。
