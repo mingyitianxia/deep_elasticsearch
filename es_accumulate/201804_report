@@ -1,0 +1,440 @@
+# Elasticsearch中文社区-4月问题实战精华篇
+
+# 题记
+遵照之前的承诺，将社区中最精华的答疑整理梳理如下。
+
+问题都是网友根据生产、开发场景实际问题提出的，回复来自滴滴、携程、Elasticsearch等公司的技术大神。
+
+以后会每月一整理，满满的干货，节省您的时间！
+
+
+# 问题1、 ES GET大小问题？
+> elasticsearch 中的 GET 有大小限制吗?
+> 我们都知道在HTTP中，GET请求和POST请求不同，GET请求有大小限制，那么ES中的GET和HTTP请求中的GET是否相同？另外ES中的GET有大小限制吗？
+
+答案：
+一样的 默认也是4kb 但是可以更改 elasticsearch.yml
+
+```
+http.max_initial_line_length: "8k"
+```
+
+参考：
+
+[ES官网配置参考](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-http.html)
+
+# 问题2：ES集群占据虚拟内存高的根因？
+
+> 怎么解决elasticsearch集群占用太多虚拟内存(VIRT)的问题？占用了几十个G，有什么可以对它进行限制的相关设置吗？
+> 我这里是es5.6.4版本的，有十个节点，都是64G内存的配置，集群启动后，具体表现在用top命令查看，发现虚拟内存有70G,80G，严重影响到其他任务的正常运行。
+
+> 查了官方文档说是从索引文件映射的方式是MMap,会使用到大量虚拟内存，然后就没下文了。
+> 难道默认就是无限制的，虚拟内存会随着集群索引数据量的增长而无限增长吗？
+
+> 怎么限制住对虚拟内存的占用？
+> 请教各位大神帮忙解答一下。
+
+携程-Wood大叔回复：
+
+ES5.x以后，对于lucene索引文件改为mmap的方式进行访问，当索引被打开以后，ES会将文件映射到虚拟内存空间，但并不会读取到物理内存里。
+
+只有索引文件被访问的时候，才会通过os将读取的部分从磁盘page in到物理内存。 由于虚拟内存并不是实际的物理内存占用，并且os本身会管理映射内存的的page in/page out，看似很大很吓人的虚拟内存占用其实并无任何问题。 
+
+并且在物理内存足够的情况下，这种方式通常可以提升ES对索引文件的访问速度。参考:[use-lucenes-mmapdirectory-on-64bit](http://blog.thetaphi.de/2012/07/use-lucenes-mmapdirectory-on-64bit.html)
+ 
+根据经验，如果按照官方的建议，给ES heap的内存少于机器可用物理内存的一半，通常不会有什么问题。  实际生产环境种，我们遇到过的相关问题场景: 预留的物理内存大大少于ES heap内存，从而在做大的查询聚合时，因为物理内存紧缺，mmap引起高频度的page in/page out，性能变得很差。
+
+# 问题3、关于flush和translog？
+
+flush指的是将底层的索引文件(segment file)持久化到磁盘，从而可以清除掉translog的过程。 而translog的的fsync指的是将translog文件本身持久化到磁盘的一个系统调用，和segment file的持久化是两回事情。
+
+首先你要理解flush的意思（冲刷）。
+而fsync，我个人的理解是将translog文件同步写入磁盘的过程。它的出发条件很多，所以间隔要小，才能防止数据丢失。
+
+其实flush API的作用是强制停止translog的fsync行为，提交segment并清除translog。间隔要尽量大一点（需要优化写速度的话，就稍微调大一点flush间隔。）
+
+所以fsync行为是translog平时进行的持久化行为，而flush只是一种强制行为，一般手动执行的话，是在关闭节点前进行的，确保数据全部写入磁盘。
+
+虽然这两种方式都在操作translog，但理解起来要从作用出发，而不是关注translog。
+
+# 问题4：
+es flush时间 和 translog fsync时间的疑惑？
+
+- flush定义：事务日志 （transcation log)中的信息与存储介质之间的同步（同时清空事务日志）；
+- 30分钟定义：index_translog.flush_threshold_period该参数对应的默认值，它控制了强制自动事务日志刷新的时间间隔（即便是没有新数据写入）。强制进行事务日志刷新通常会导致大量的IO操作，因此有时当事务日志涉及少量数据时，更适合进行频繁的事务日志刷新操作。
+- 5S的定义：index.gateway.local.sync参数的对应值，该参数定义了通过fsync系统调用同步事务日志数据的频率，默认5s一次。
+
+from wood大叔：
+
+> 
+> flush指的是将底层的索引文件(segment file)持久化到磁盘，从而可以清除掉translog的过程。
+> 
+> 而translog的的fsync指的是将translog文件本身持久化到磁盘的一个系统调用，和segment file的持久化是两回事情。
+> 
+
+# 问题5：search_after怎么用，参数是什么意思？
+https://elasticsearch.cn/question/3890
+```
+POST /shakespeare/_search?
+{
+
+   "query": {
+
+      "match_all": {}
+
+   },
+
+   "search_after":[30,"shakespeare#9"],
+
+    "sort": [
+        {"line_id": "asc"},
+        {"_id": "desc"}
+    ],
+
+   "size":5
+
+}
+```
+
+search_after 就是根据你sort的排序规则，填写上次获取的最后一个数据的值
+你做的实验是按照line_id 和 _id 排序的，
+
+所以填写上次获取最后一个数据的line_id和_id 即 search_after : [last_line_id, last_id]
+如果你只按照_id排序的话 只需要填写上次获取最后一个数据的_id 即 search_after: [last_id]
+
+# 问题6：
+logstash按照filter过滤出的时间动态创建索引 时区不对
+已日志的时间为时间戳可以 在意日志的的时间作为索引名称就差了8个小时
+https://elasticsearch.cn/question/3883
+
+在logstash filter 解决
+1. 增加一个字段，计算timestamap+8小时
+
+```
+ruby { 
+    code => "event.set('index_date', event.get('@timestamp').time.localtime + 8*60*60)" 
+}
+```
+### 新增索引日期,解决地区时差问题 
+
+
+2. 用mutate插件先转换为string类型,gsub只处理string类型的数据，在用正则匹配，最终得到想要的日期
+### 定义索引名时间
+
+```
+mutate { 
+    convert => ["index_date", "string"] 
+    gsub => ["index_date", "-\d{2}T([\S\s]*?)Z", ""] 
+    gsub => ["index_date", "-", "."] 
+}
+```
+   
+
+3.output配置
+elasticsearch { 
+
+```
+hosts => ["localhost:9200"] 
+  index => "mddweb_%{index_date}" 
+}
+```
+
+# 问题7：logstash同步加上唯一ID去重复
+
+使用 nginx request_id这个内置变量，作为文档uid
+
+参考文献：https://www.jianshu.com/p/5e103e1eb017
+
+参考文献：https://www.elastic.co/blog/lo ... cates
+2 小时前 0 0
+
+
+# 问题8：elasticsearch的数据怎么只保留前七天的数据
+https://elasticsearch.cn/question/3961
+
+1.请使用官方的工具
+elasticsearch-curator
+https://pypi.python.org/pypi/elasticsearch-curator
+
+2.medcl回复：——恩，对的，Curator 可以解决这个需求，另外 6.3  有一个 Index LifeCycle Management 可以很方便的管理索引的保存期限。
+
+# 问题9：有没有elasticsearch集群自动化部署方案？
+首先你要有用 saltstack、ansible 这类运维工具，如果你用 ansible ，可以看下官方的 playbook
+ 
+https://github.com/elastic/ansible-elasticsearch
+ 
+其他运维工具也类似，可以搜下看是否有别人共享的配置
+
+# 问题10：单个索引很大的解决方案？
+> 单key的value特别大的时候，有什么使用建议么？
+
+> 我现在想存一种日志数据，日志体特别大，但是搜索条件不会使用到日志体查询,大概100亿条100T大小。
+> 初步想法是 用两个index，一个类似用作搜索引擎（index A），只存储需要查询的key，还有一个索引文档是id加body体（index B）。
+
+> 这样做很大数据量查询的时候，只会查询index A能快速查询到列表，再去B用id查询查明细。 这样是不是可以避免了很大的io开销？
+> 
+> 或者换成 nested，parent-child那种单独文档的结构有帮助么？
+
+ 
+wood@Ctrip回复：
+
+> 不用搞这么复杂，就放一个索引，日志体因为不需要做检索，可以将该字段在mapping里**设置成"enabled": false**，也就是不索引。
+
+ES的索引和原始数据的存放是分开的，查询的时候只走索引，不受存放的原始数据大小影响。 只有查到了结果，fetch数据阶段，才回去访问很大的source store。
+
+# 问题11：Elasticsearch内存配置成系统内存的50%是否合理？
+
+通常的用法就物理内存的一半，且不超过32G。你是怎样监控未被Lucene使用的？ 如@kennywu76所说，Lucene使用的是系统的文件cache功能。
+
+在linux利用free命令看一下，cached的使用量应该会比较高，这块是lucene文件读写用到的缓存。
+
+kennywu76 - wood@Ctrip
+事实上，给ES分配的内存有一个魔法上限值26GB，这样可以确保启用zero based Compressed Oops，这样性能才是最佳的。参考:
+https://www.elastic.co/blog/a-heap-of-trouble
+
+# 问题12：elasticsearch磁盘存储设置，急急急
+elasticsearch目前单机，日志java.io.IOException: No space left on device，提示是磁盘空间不够，但是机器是有空间的，请问怎么设置，我有20M的日志数据，为什么到elasticsearch里面就存储了150M左右呢？
+
+**步骤1：**
+先查看下elasticsearch.yml文件中path.data配置数据存放的目录，再通过df -h查看读取磁盘空间，是否是因为es存储数据所在的磁盘比较小，而其余磁盘比较空。
+ 
+es占用的磁盘空间比原始日志数据还要大的可能原因，
+
+1. 保存日志数据的索引设置了副本(GET _cat/indices/{indexName}?v 查看pri.store.size的值)  
+
+3. 索引的mapping配置，如果设置了分词，占用的空间就会大(多了倒排索引文件)
+
+**步骤2**：猜测楼主没有对mapping进行优化，所以对占用的空间很诧异。去掉不必要的分词，存储会节省空间。
+
+# 问题13 ：logstash和es时区问题
+> 大神我这边有个时区的问题一直没法儿解决，能帮个忙嘛？
+> 从网上找的下面的语句。但是实际使用的时候，发现有的日志时间统一，有的时间不统一。
+
+
+```
+filter { 
+  date {  
+    match => ["message","UNIX_MS"]  
+    target => "@timestamp"     
+  }  
+  ruby {   
+    code => "event.set('timestamp', event.get('@timestamp').time.localtime)"   
+  }  
+  ruby {  
+    code => "event.set('@timestamp',event.get('timestamp'))"  
+  }  
+  mutate {  
+    remove_field => ["timestamp"]  
+gsub =>  ["message","SLBHealthCheck","KeepAliveClient"]
+  }  
+}
+```
+解决方案：
+
+```
+ruby {   
+    code => "event.set('timestamp', event.get('@timestamp').time.utc+8*60*60)"   
+  }
+```
+# 问题14 存储方案选型
+> es监控业务数据做时间聚合，索引方案
+> 麻烦问下，有谁用es监控过业务数据吗，需要做时间聚合，针对5分钟，10分钟，然后现在有两种方案，>  
+
+> 一种是一天的数据作为一个index 一种是都放在一个index下，通过type document区别？
+> 
+> 哪种会比较好？比较快，有实践过的吗？ 求大神指教，需要考虑系统的增长，基本不会删除索引（最多是删除10年前的数据），各有什么优缺点
+
+索引个数上限跟集群大小有关，索引个数多了，元数据信息就庞大，master处理的任务繁重。例如100个节点组成的集群(3千个索引，4万个shard)。一般情况是一天一个索引，如果一天的数据量不大的话(50g左右)，可以考虑一个月一个索引，或者一个星期一个索引。
+
+如果没有设置index.number_of_shards，es默认设置5个。并不是一个索引只有5个主分片，可以手动设置的。一般是创建一个索引模板，新创建的索引如果匹配到索引表达式，就会用模板中的配置信息。
+
+```
+PUT _template/indexTemplate
+{
+"order": 10,
+"template": "{indexExpression}",//这里是索引表达式*
+"settings": {
+"index": {
+"number_of_shards": "100",//主分片个数
+"number_of_replicas": "1"//副本数
+}
+},
+"mappings": {
+//这里是mapping
+},
+"aliases": {}
+}
+}
+```
+
+# 问题15：ES的数据存储在服务器中超过85%？
+
+
+> ES的数据存储在服务器中超过85%，
+> 然后自己会降下来，请问这是什么原因？
+
+
+集群中节点之间进行rebalance。
+cluster.routing.allocation.disk.watermark.low：控制磁盘使用的低水位。默认为85%，意味着如果节点磁盘使用超过85%，则ES不允许在分配新的分片。
+
+cluster.routing.allocation.disk.watermark.high：控制磁盘使用的高水位。默认为90%，意味着如果磁盘空间使用高于90%时，ES将尝试分配分片到其他节点。
+
+# 问题16：shard无法恢复的原因？
+https://elasticsearch.cn/question/3998
+
+wood携程回复：
+
+这种情况一般出现在有结点短暂离开集群，然后马上重新加入，并且有线程正在对某个shard做bulk或者scroll等长时间的写入操作。等结点重新加入集群的时候，由于shard lock没有释放，master无法allocate这个shard。 
+
+通常/_cluster/reroute?retry_failed=true可以解决问题，如果按照你说的依然无法解决，可能还有其他原因导致锁住该shard的线程长时间操作该shard无法释放锁（长时间GC?)。 
+ 
+如果retry_failed无法解决问题，可以尝试一下allocate_stale_primary，前提是需要知道这个shard的primary在哪个结点上。实在解决不了，又不想丢数据，还可以重启一下该结点，内存锁应该可以释放。
+
+哦，记起来了，是在做scroll查询操作在。
+
+顺便再问下，在机械盘情况下，lucene merge导致的io瓶颈，从而导致节点负载较高，然后节点通信失败，这个问题怎么处理呢
+
+
+回复 kennywu76：
+后台的merge一般不会引起这个问题，我理解你说的是force merge? 对于force merge，因为需要消耗大量的磁盘IO，一般需要放在业务低峰期，结点比较空闲的时候做。
+
+另外如果磁盘IO性能有限，merge出来的文件块大小也要控制一下。如果shard实在太大，那merge的max_segments这个参数可能需要设置大一点，避免merge大文件消耗过多的IO。
+
+另外如果是大内存的机器，内核层面关于dirty page写回的几个参数不能设置太大，否则merge可能引起比较多的dirty page write back集中写回磁盘，造成长时间的应用停顿。下面两个参数在我们生产环境的设置供参考:
+
+```
+vm.dirty_background_ratio = 5
+vm.dirty_ratio = 10
+```
+
+“否则merge可能引起比较多的dirty page write back集中写回磁盘”，这种状况发生前有没有什么征兆？
+
+
+
+@kennywu76: 多谢回复。是后台merge，属于写入较多，查询较少的集群。属于偶尔发生，突然就负载奔上去了。然后节点remove。dirty page的参数我再看下
+
+
+回复 kennywu76 ：
+@yayg2008:征兆是没有的，只有发生时的后果，可以通过监控磁盘IO和load average发现。
+
+我们生产上之前遭遇此类问题的时候，是因为系统管理员给linux配置的vm.dirty_background_ratio =20 , vm.dirty_ratio = 40。 
+
+我们的服务器内存是128GB，这样极端情况下，有大量数据写入的时候，可能短时间积累了很多脏页集中写回。当写回速度跟不上，可能触发vm.dirty_ratio=40这个上限值，这时候os会阻塞所有新的IO请求进行写回操作。 监控上看，os的load 
+
+average会飙高得非常夸张。JVM可能因为长时间停滞，导致结点掉出集群。 在机器上反复执行grep -P "Dirty:|Writeback:" /proc/meminfo这个命令，可以看到脏页产生的量和写回的量。 监控这两个指标，可以帮助判断load过高是否和脏页太多有关系。
+
+
+# 问题17:倒排索引 数字和日期类型的问题
+
+> 网上大多数讲倒排索引都会拿一个文档和里面的内容做例子，其实就是一个field 里面的字符串内容分词后构建倒排索引以后简单的一个模型。
+> 
+> 但是如果field不再是文章字符串，而是数字，日期，这种情况下倒排索引又是如何构建的呢？难道从0到Integer.MAX_VALUE 每个数字构建一个和文档的关系吗？
+> 
+> 日期如果也这么做就更可怕了，精确到毫秒下这种倒排列会更多，做范围查询效率会更低。倒排索引s又是如何处理数字日期这种数据呢?
+
+_wood大叔回复：
+早期ES/Lucene版本是将数值**转换成字符串形式**，利用倒排表做查找的。
+## 早期版本
+为了解决离散的数值多带来的查找性能问题，Lucene在编排倒排表的时候，比较巧妙的引入了一些特殊的Term，比如"
+50x75=[doc40,doc41,doc53,doc78,doc99,...]"， 表示50-75这个范围的数值包含在后面哪些文档列表里。由此“
+50 OR 51 OR 52 ... OR 100”这样的范围查找，被优化成类似“50x75 OR 76x99 OR 100"这样的形式。 
+
+对于该算法的详细解释参考: https://blog.parse.ly/post/1691/lucene/ 
+
+## ES5.X以后的版本
+从ES5.0版本(Lucene 6.0)开始，对于数值型字段，改用了k-d tree这种数据结构编码。
+
+改用这种数据结构以后，数值型数据的索引以及范围查找效率比之前用倒排编码的方式提高很多。
+
+参考: https://www.elastic.co/blog/lucene-points-6.0
+
+# 问题18：想给收到的日志新增加一个日志等级字段？
+更新Mapping字段的方法！
+
+```
+PUT test_index/_mapping/test_doc_type
+{
+  "properties": {
+    "level": {
+      "type": "text"
+    }
+  }
+}
+```
+
+# 问题19：在线分词小工具推荐
+https://elasticsearch.cn/article/588
+
+# 问题20：Elasticsearch实现查询汽车历史行驶轨迹
+
+> 因为业务不明确，我也说不出具体，我设想的是实现滴滴打车，行车结束可以查看之前行车记录；但这个基于elasticsearch+mysql该怎么设计模型？
+
+轨迹数据核心的就是汽车+时间戳+经纬度坐标。最简单的实践就是查询经纬度，按时间排序，然后在kibana上的地图图层上就可以展示轨迹了。
+
+那也就是说一辆车行驶过程中，会有很多点组成轨迹，一个坐标点es存储一个文档记录，（车id，坐标点，时间戳），是这样吗？
+
+对，轨迹最终都是有点连成的线，采集频率越高，越精细。
+
+# 问题21：elasticsearch磁盘存储设置，急急急？
+> elasticsearch目前单机，日志java.io.IOException: No space left on device，提示是磁盘空间不够，但是机器是有空间的，请问怎么设置，我有20M的日志数据，为什么到elasticsearch里面就存储了150M左右呢？
+
+先查看下elasticsearch.yml文件中path.data配置数据存放的目录，再通过df -h查看读取磁盘空间，是否是因为es存储数据所在的磁盘比较小，而其余磁盘比较空。
+ 
+es占用的磁盘空间比原始日志数据还要大的可能原因，
+1. 保存日志数据的索引设置了副本(GET _cat/indices/{indexName}?v 查看pri.store.size的值) 
+
+2. 索引的mapping配置，如果设置了分词，占用的空间就会大(多了倒排索引文件)
+3. 猜测楼主没有对mapping进行优化，所以对占用的空间很诧异。去掉不必要的分词，存储会节省空间。
+4. 补充一点： mapping一定要正确预先定义字段类型，避免在写入数据的时候根据数据类型让ES自己动态生成类型。 特别是字符串，ES动态生成的是multi-field，包含一个text，一个keyword类型。 往往有一个类型不是你需要的，却浪费了大量的磁盘空间。
+5. 同意楼上，es默认80%的时候磁盘就会报警，你可以关闭这个磁盘监控
+
+```
+curl -XPUT ip:9200/_cluster/settings -d '
+{ "transient" : 
+{ "cluster.routing.allocation.disk.threshold_enabled" : 
+false
+} }'
+```
+
+# 问题22：
+拼音搜索+中文搜索
+
+```
+项目中对视频名称进行搜索，需要支持拼音+中文搜索两种方式，请教应该如何填写搜索配置，样例数据如下：
+全部数据：刘德华、刘斌、张三、李四、刘德志
+中文搜索：
+1、搜索“刘”，匹配到“刘德华”、“刘斌”、“刘德志”
+2、搜索“刘德”，匹配到“刘德华”、“刘德志”
+3、搜索“德华”，匹配到“刘德华”
+小结：搜索的文字需要匹配到集合中所有名字的子集。
+拼音搜索：
+1、搜索“liu”，匹配到“刘德华”、“刘斌”、“刘德志”
+2、搜索“liude”，匹配到“刘德华”、“刘德”
+3、搜索“liudehua”或“ldh”，匹配到“刘德华”
+小结：搜索的文字转换成拼音后，需要匹配到集合中所有名字转成拼音后的子集
+```
+
+https://elasticsearch.cn/question/407
+
+# 问题23 es中有自动创建了很多索引，怎么禁止？安装了x-pack
+
+安装了x-pack，这些watcher开头的索引是跟es里watcher监控插件有关。
+
+## 方法1是设置watcher索引保存时间 
+
+## 方法2是action.auto_create_index: false 关闭了自动创建索引。
+
+
+
+![image]()
+
+加入知识星球，更短时间更快习得更多干货！
+
+
+
+
+
+
+
+
+ 
