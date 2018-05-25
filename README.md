@@ -14,6 +14,6 @@ deep_elasticsearch for learning!
 
 【2】博客:https://blog.csdn.net/laoyang360
 
-![加入知识星球，更多时间更快习得更多干货！](http://t.cn/Ru3KXmg)
+![加入知识星球，更多时间更快习得更多干货！](https://t.zsxq.com/UR76eim)
 
 加入知识星球，更多时间更快习得更多干货！
