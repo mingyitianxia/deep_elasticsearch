@@ -16,4 +16,4 @@ deep_elasticsearch for learning!
 
 ![加入知识星球，更多时间更快习得更多干货！](https://github.com/laoyang360/deep_elasticsearch/blob/master/20180308060649363.png)
 
-加入知识星球，更多时间更快习得更多干货！
+加入知识星球，更短时间更快习得更多干货！
