@@ -1,0 +1,76 @@
+# ES区分大小写
+
+## 1、创建索引
+
+
+```
+DELETE indexx
+PUT indexx
+{
+"settings": {
+    "analysis": {
+      "normalizer": {
+        "my_normalizer": {
+          "type": "custom",
+          "filter": ["lowercase", "asciifolding"]
+        }
+      }
+    }
+  },  
+   "mappings": {
+    "type": {
+      "properties": {
+        "foo": {
+          "type": "keyword",
+          "normalizer": "my_normalizer"
+        }
+      }
+    }
+  }
+}
+```
+
+## 2、插入数据
+```
+POST indexx/type/1
+{
+  "foo":"Meet"
+}
+
+POST indexx/type/2
+{
+  "foo":"meet"
+}
+
+POST indexx/type/3
+{
+  "foo":"MEET"
+}
+```
+
+## 3、检索验证
+```
+POST indexx/type/_search
+{
+  "query":{
+    "wildcard":{
+      "foo":"*mee*"
+    }
+  }
+}
+```
+
+## 4、聚合验证
+```
+POST indexx/_search
+{
+  "size":0,
+  "aggs": {
+    "foo_aggs": {
+      "terms": {
+        "field": "foo"
+      }
+    }
+  }
+}
+```
