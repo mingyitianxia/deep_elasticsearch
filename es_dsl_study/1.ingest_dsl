@@ -1,0 +1,45 @@
+# 1、rename 修改字段名称管道
+
+将字段名称：hostname 改成了 host。
+
+```
+PUT _ingest/pipeline/rename_hostname
+{
+  "processors": [
+    {
+      "rename": {
+        "field": "hostname",
+        "target_field": "host",
+        "ignore_missing": true
+      }
+    }
+  ]
+}
+
+
+POST server/values/?pipeline=rename_hostname
+{
+  "hostname": "myserver"
+}
+```
+
+# 2、append 添加管道
+
+说明： 为字段tags 添加值。
+```
+PUT _ingest/pipeline/append_tags
+{
+  "processors": [
+    {
+  "append": {
+    "field": "tags",
+    "value": ["production", "phone", "USA"]
+  }
+}
+]}
+```
+
+# 3、
+
+
+
