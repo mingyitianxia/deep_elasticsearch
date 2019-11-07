@@ -4,7 +4,7 @@ deep_elasticsearch for learning!
 # 1、deep_elasticsearch 内容
 - 博客、公众号的补充，更多实战DSL；
 - 更多ELK Stack、搜索引擎经典书籍中的实战DSL及其他源码；
-- Elasticsearch中文社区及其他论坛搜集的核心干货，以月为单位总结。
+- Elasticsearch中文社区及其他论坛搜集的核心干货，以月为单位总结，已连续更新大于18个月+。
 
 
 
@@ -14,6 +14,5 @@ deep_elasticsearch for learning!
 
 【2】博客: https://elastic.blog.csdn.net/
 
-![加入知识星球，和硅谷、BAT一线大佬更短时间更快习得更多干货！](http://t.cn/RmwM3N9)
+【3】加入知识星球，和硅谷、BAT一线大佬更短时间更快习得更多干货！http://t.cn/RmwM3N9
 
-加入知识星球，更短时间更快习得更多干货！
