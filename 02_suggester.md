@@ -57,34 +57,32 @@ POST library/_search
 # 3、completion suggester 参见Elasitcsearch社区大神讲解
 参考：https://elasticsearch.cn/article/142
 
-在ES6.2.2下实战：
+在ES7.2下实战：
 
 ```
-PUT /blogs/
+PUT /blogs
 {
   "mappings": {
-    "tech": {
       "properties": {
         "body": {
           "type": "text"
         }
       }
     }
-  }
 }
 
 POST _bulk/?refresh=true
-{ "index" : { "_index" : "blogs", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs" } }
 { "body": "Lucene is cool"}
-{ "index" : { "_index" : "blogs", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs" } }
 { "body": "Elasticsearch builds on top of lucene"}
-{ "index" : { "_index" : "blogs", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs" } }
 { "body": "Elasticsearch rocks"}
-{ "index" : { "_index" : "blogs", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs" } }
 { "body": "Elastic is the company behind ELK stack"}
-{ "index" : { "_index" : "blogs", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs" } }
 { "body": "elk rocks"}
-{ "index" : { "_index" : "blogs", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs" } }
 {  "body": "elasticsearch is rock solid"}
 
 POST _analyze
@@ -144,28 +142,26 @@ POST /blogs/_search
 PUT /blogs_completion/
 {
   "mappings": {
-    "tech": {
       "properties": {
         "body": {
           "type": "completion"
         }
       }
     }
-  }
 }
 
 POST _bulk/?refresh=true
-{ "index" : { "_index" : "blogs_completion", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs_completion"} }
 { "body": "Lucene is cool"}
-{ "index" : { "_index" : "blogs_completion", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs_completion"} }
 { "body": "Elasticsearch builds on top of lucene"}
-{ "index" : { "_index" : "blogs_completion", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs_completion" } }
 { "body": "Elasticsearch rocks"}
-{ "index" : { "_index" : "blogs_completion", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs_completion" } }
 { "body": "Elastic is the company behind ELK stack"}
-{ "index" : { "_index" : "blogs_completion", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs_completion" } }
 { "body": "the elk stack rocks"}
-{ "index" : { "_index" : "blogs_completion", "_type" : "tech" } }
+{ "index" : { "_index" : "blogs_completion"} }
 { "body": "elasticsearch is rock solid"}
 
 POST blogs_completion/_search?pretty
@@ -183,7 +179,6 @@ POST blogs_completion/_search?pretty
 PUT /blogs_completion_02/
 {
   "mappings": {
-    "tech": {
       "properties": {
         "body": {
           "type": "completion",
@@ -191,7 +186,6 @@ PUT /blogs_completion_02/
         }
       }
     }
-  }
 }
 
 POST blogs_completion_02/_search?pretty
