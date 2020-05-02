@@ -14,5 +14,5 @@ deep_elasticsearch for learning!
 
 【2】博客: https://elastic.blog.csdn.net/
 
-【3】加入知识星球，和硅谷、BAT一线大佬更短时间更快习得更多干货！http://t.cn/RmwM3N9
+【3】加入死磕Elasticsearch知识星球（中国通过Elastic认证工程师人数最多的圈子），和硅谷、BAT一线大佬更短时间更快习得更多干货！http://t.cn/RmwM3N9
 
