@@ -2,7 +2,7 @@
 
 【死磕ES知识星球】
 
-http://t.cn/RmwM3N9；
+http://t.cn/RmwM3N9
 
 
 【死磕ES公众号】
